@@ -55,12 +55,13 @@ from cura.Scene.SliceableObjectDecorator import SliceableObjectDecorator
 from cura.Scene.BlockSlicingDecorator import BlockSlicingDecorator
 from cura.Scene.BuildPlateDecorator import BuildPlateDecorator
 from cura.Scene.CuraSceneNode import CuraSceneNode
-
 from cura.Scene.CuraSceneController import CuraSceneController
 
 from UM.Settings.SettingDefinition import SettingDefinition, DefinitionPropertyType
 from UM.Settings.ContainerRegistry import ContainerRegistry
 from UM.Settings.SettingFunction import SettingFunction
+
+from cura.Settings.CuraContainerRegistry import CuraContainerRegistry
 from cura.Settings.MachineNameValidator import MachineNameValidator
 
 from cura.Machines.Models.BuildPlateModel import BuildPlateModel
@@ -98,6 +99,8 @@ from . import PrintJobPreviewImageProvider
 from . import MachineActionManager
 
 from cura.TaskManagement.OnExitCallbackManager import OnExitCallbackManager
+
+from cura.CuraPackageManager import CuraPackageManager
 
 from cura.Settings.MachineManager import MachineManager
 from cura.Settings.ExtruderManager import ExtruderManager
@@ -239,9 +242,10 @@ class CuraApplication(QtApplication):
         self._auto_save = None
         self._save_data_enabled = True
 
-        from cura.Settings.CuraContainerRegistry import CuraContainerRegistry
         self._container_registry_class = CuraContainerRegistry
-        from cura.CuraPackageManager import CuraPackageManager
+        # Redefined here in order to please the typing.
+        self._container_registry = None  # type: CuraContainerRegistry
+
         self._package_manager_class = CuraPackageManager
 
     # Adds command line options to the command line parser. This should be called after the application is created and
@@ -674,7 +678,7 @@ class CuraApplication(QtApplication):
 
         Logger.log("i", "Initializing quality manager")
         from cura.Machines.QualityManager import QualityManager
-        self._quality_manager = QualityManager(container_registry, parent = self)
+        self._quality_manager = QualityManager(self, parent = self)
         self._quality_manager.initialize()
 
         Logger.log("i", "Initializing machine manager")
@@ -799,6 +803,9 @@ class CuraApplication(QtApplication):
 
         # Hide the splash screen
         self.closeSplash()
+
+    def getContainerRegistry(self) -> "CuraContainerRegistery":
+        return self._container_registry
 
     @pyqtSlot(result = QObject)
     def getSettingVisibilityPresetsModel(self, *args) -> SettingVisibilityPresetsModel:

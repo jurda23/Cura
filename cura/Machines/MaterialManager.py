@@ -8,10 +8,8 @@ from typing import Dict, Optional, TYPE_CHECKING, Any, Set, List, cast, Tuple
 
 from PyQt5.Qt import QTimer, QObject, pyqtSignal, pyqtSlot
 
-from UM.Application import Application
 from UM.ConfigurationErrorMessage import ConfigurationErrorMessage
 from UM.Logger import Logger
-from UM.Settings.ContainerRegistry import ContainerRegistry
 from UM.Settings.SettingFunction import SettingFunction
 from UM.Util import parseBool
 
@@ -21,6 +19,7 @@ from .VariantType import VariantType
 
 if TYPE_CHECKING:
     from UM.Settings.DefinitionContainer import DefinitionContainer
+    from cura.CuraApplication import CuraApplication
     from cura.Settings.GlobalStack import GlobalStack
     from cura.Settings.ExtruderStack import ExtruderStack
 
@@ -40,10 +39,10 @@ class MaterialManager(QObject):
     materialsUpdated = pyqtSignal()  # Emitted whenever the material lookup tables are updated.
     favoritesUpdated = pyqtSignal()  # Emitted whenever the favorites are changed
 
-    def __init__(self, container_registry, parent = None):
+    def __init__(self, application: "CuraApplication", parent: Optional["QObject"] = None) -> None:
         super().__init__(parent)
-        self._application = Application.getInstance()
-        self._container_registry = container_registry  # type: ContainerRegistry
+        self._application = application
+        self._container_registry = self._application.getContainerRegistry()
 
         # Material_type -> generic material metadata
         self._fallback_materials_map = dict()  # type: Dict[str, Dict[str, Any]]
